@@ -2,7 +2,6 @@ package com.example.musicapp.security;
 
 
 import com.example.musicapp.services.CustomUserDetailsService;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
@@ -26,32 +25,53 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final OAuth2LoginSuccessHandler successHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            CustomUserDetailsService userDetailsService
+            CustomUserDetailsService userDetailsService,
+            OAuth2LoginSuccessHandler successHandler,
+            CustomOAuth2UserService customOAuth2UserService
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
+        this.successHandler = successHandler;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**", "/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/profile")
+                        .successHandler(successHandler)
+                        .failureHandler((request, response, exception) -> {
+                            exception.printStackTrace(); // вывод ошибки в консоль
+                            response.sendRedirect("/login?error=" + exception.getMessage());
+                        })
+                        .userInfoEndpoint(info -> info
+                                .userService(customOAuth2UserService))
+                        .defaultSuccessUrl("/profile", true)
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

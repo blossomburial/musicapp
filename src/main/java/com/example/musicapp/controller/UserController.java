@@ -2,37 +2,48 @@ package com.example.musicapp.controller;
 
 import com.example.musicapp.dtos.RegistrationDto;
 import com.example.musicapp.dtos.LoginDto;
+import com.example.musicapp.models.ExternalService;
+import com.example.musicapp.repositories.UserRepository;
+import com.example.musicapp.repositories.ExternalServiceRepository;
+import com.example.musicapp.models.User;
 import com.example.musicapp.services.AuthService;
 import com.example.musicapp.services.UserService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
-    private final AuthService authService;
+    private final ExternalServiceRepository externalServiceRepository;
+    private final UserRepository userRepository;
 
-    @GetMapping("/signup")
-    public String showRegistrationPage(Model model) {
-        model.addAttribute("user", new RegistrationDto());
-        return "registration";
+    @GetMapping("/profile")
+    public String profile(Model model, Principal principal){
+
+        String username = principal.getName();
+        User user = userRepository.findByUsername(username).orElse(null);
+        System.out.println(user);
+
+        if (user != null) {
+            model.addAttribute("username", user.getUsername());
+            model.addAttribute("email", user.getEmail());
+            model.addAttribute("accountLinked", user.getTokens() != null);
+        }
+        return "profile";
     }
 
-    @GetMapping("/login")
-    public String showLoginForm(Model model, LoginDto loginDto) {
-        model.addAttribute("user", new LoginDto());
-        return "login"; //
+
+
+    @GetMapping("/profile/settings")
+    public String settingsPage(){
+        return "settings";
     }
-//
-//    @GetMapping("/profile")
-//    public String profile(Principal principal,
-//                          Model model) {
-//        User user = userService.getUserByPrincipal(principal);
-//        model.addAttribute("user", user);
-//        return "profile";
-//    }
 
 }

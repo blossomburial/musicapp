@@ -35,6 +35,25 @@ public class User implements UserDetails {
 
     private boolean enabled;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Map<String, OAuthToken> tokens = new HashMap<>();
+
+    public String getTokens(String provider){
+        String token = tokens.get(provider).getAccessToken();
+        return token;
+    }
+
+    public void addToken(String provider, OAuthToken token) {
+        tokens.put(provider, token);
+        token.setUser(this);
+    }
+
+    public void removeToken(String provider) {
+        OAuthToken token = tokens.get(provider);
+        tokens.remove(provider);
+        token.setUser(null);
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
