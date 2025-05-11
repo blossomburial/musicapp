@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Профиль</title>
+</head>
+<body>
+<h1>Профиль пользователя</h1>
+
+<p><strong>Имя пользователя:</strong> <span th:text="${username}"></span></p>
+<p><strong>Email:</strong> <span th:text="${email}"></span></p>
+
+<p>
+    <strong>accounts:</strong>
+    <span th:each="token: ${accountLinked}"> </span>
+    <td th:text="${token}"></td>
+    </p>
+
+</body>
+</html>
