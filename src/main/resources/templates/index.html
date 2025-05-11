@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<script>
+    function logout() {
+        localStorage.removeItem("jwtToken");
+        window.location.href = "/login";
+}
+</script>
+
 <head>
     <meta charset="UTF-8">
     <title>Главная страница</title>
@@ -11,7 +18,7 @@
 
 <div sec:authorize="isAuthenticated()">
     <p>Вы вошли как: <span sec:authentication="name"></span></p>
-    <a th:href="@{logout}">Выйти</a>
+    <a th:func>Выйти</a>
 </div>
 <div sec:authorize="isAnonymous()">
     <a th:href="@{login}">Войти</a>

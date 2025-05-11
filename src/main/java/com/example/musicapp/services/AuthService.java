@@ -9,12 +9,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Objects;
 import java.util.Optional;
 
-
-@Service
-public class AuthService {
+public
+@Service class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -39,7 +40,7 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    public User authenticate(LoginDto input) {
+    public User authenticate(@RequestBody LoginDto input) {
         Optional<User> optionalUser = userRepository.findByUsername(input.getUsername());
 
         if (optionalUser.isEmpty()) {
@@ -58,4 +59,5 @@ public class AuthService {
         return user;
     }
 }
+
 

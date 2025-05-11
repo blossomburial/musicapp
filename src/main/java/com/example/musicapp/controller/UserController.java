@@ -29,7 +29,6 @@ public class UserController {
 
         String username = principal.getName();
         User user = userRepository.findByUsername(username).orElse(null);
-        System.out.println(user);
 
         if (user != null) {
             model.addAttribute("username", user.getUsername());

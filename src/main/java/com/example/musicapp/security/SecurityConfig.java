@@ -1,6 +1,7 @@
 package com.example.musicapp.security;
 
 
+import com.example.musicapp.services.CustomOAuth2UserService;
 import com.example.musicapp.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
