@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Objects;
 import java.util.Optional;
 
-public
-@Service class AuthService {
+@Service
+public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -40,7 +40,7 @@ public
         return userRepository.save(user);
     }
 
-    public User authenticate(@RequestBody LoginDto input) {
+    public User authenticate(LoginDto input) {
         Optional<User> optionalUser = userRepository.findByUsername(input.getUsername());
 
         if (optionalUser.isEmpty()) {

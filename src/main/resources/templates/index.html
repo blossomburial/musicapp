@@ -18,7 +18,7 @@
 
 <div sec:authorize="isAuthenticated()">
     <p>Вы вошли как: <span sec:authentication="name"></span></p>
-    <a th:func>Выйти</a>
+    <a th:href="@{logout}">Выйти</a>
 </div>
 <div sec:authorize="isAnonymous()">
     <a th:href="@{login}">Войти</a>

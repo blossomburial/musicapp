@@ -35,23 +35,21 @@ public class User implements UserDetails {
 
     private boolean enabled;
 
+    @Column(name = "tokens")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Map<String, OAuthToken> tokens = new HashMap<>();
-
-    public String getTokens(String provider){
-        String token = tokens.get(provider).getAccessToken();
-        return token;
-    }
+    private List<OAuthToken> tokens = new ArrayList<>();
 
     public void addToken(String provider, OAuthToken token) {
-        tokens.put(provider, token);
+        tokens.add(token);
         token.setUser(this);
     }
 
-    public void removeToken(String provider) {
-        OAuthToken token = tokens.get(provider);
-        tokens.remove(provider);
-        token.setUser(null);
+    public void removeTokenByProvider(String provider) {
+        tokens.removeIf(t -> {
+            boolean match = t.getProvider().equals(provider);
+            if (match) t.setUser(null);
+            return match;
+        });
     }
 
     @Override

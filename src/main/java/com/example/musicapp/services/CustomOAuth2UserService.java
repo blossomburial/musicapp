@@ -16,41 +16,39 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
 
-    public CustomOAuth2UserService(UserRepository userRepository, TokenRepository tokenRepository) {
-        this.userRepository = userRepository;
+    public CustomOAuth2UserService(TokenRepository tokenRepository, UserRepository userRepository) {
         this.tokenRepository = tokenRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
-        OAuth2User oauth2User = delegate.loadUser(userRequest);
+    public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
+        OAuth2User user = super.loadUser(request);
 
-        String accessToken = userRequest.getAccessToken().getTokenValue();
-        String provider = userRequest.getClientRegistration().getRegistrationId();
+        String tokenValue = request.getAccessToken().getTokenValue();
+        String provider = request.getClientRegistration().getRegistrationId();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(authentication);
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-            throw new OAuth2AuthenticationException("Пользователь не авторизован в системе");
+        if (authentication != null && authentication.isAuthenticated()) {
+            String currentUsername = authentication.getName();
+            User currentUser = userRepository.findByUsername(currentUsername)
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+            OAuthToken token = new OAuthToken();
+            token.setAccessToken(tokenValue);
+            token.setProvider(provider);
+            token.setUser(currentUser);
+
+            tokenRepository.save(token);
+
         }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-
-        // Сохраняем токен
-        OAuthToken token = new OAuthToken();
-        token.setAccessToken(accessToken);
-        token.setProvider(provider);
-        token.setUser(user);
-        tokenRepository.save(token);
-
-        return oauth2User;
+        return user;
     }
 }
+

@@ -6,14 +6,31 @@
 <body>
 <h1>Профиль пользователя</h1>
 
-<p><strong>Имя пользователя:</strong> <span th:text="${username}"></span></p>
-<p><strong>Email:</strong> <span th:text="${email}"></span></p>
+<p><strong>Имя пользователя:</strong> <span th:text="${user.username}"></span></p>
+<p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
 
-<p>
-    <strong>accounts:</strong>
-    <span th:each="token: ${accountLinked}"> </span>
-    <td th:text="${token}"></td>
-    </p>
+<h2>Привязанные аккаунты</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Провайдер</th>
+        <th>Access Token</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="token : ${tokens}">
+        <td th:text="${token.provider}">Provider</td>
+        <td th:text="${token.accessToken}">Token</td>
+        <td>
+            <form th:action="@{'/profile/unlink/' + ${token.provider}}" method="post">
+                <button type="submit">Удалить</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
 
 </body>
 </html>

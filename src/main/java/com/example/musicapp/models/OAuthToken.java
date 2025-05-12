@@ -3,6 +3,8 @@ package com.example.musicapp.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
 @Setter
 @Getter
@@ -13,11 +15,15 @@ public class OAuthToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String accessToken;
-
     private String provider;
 
-    @ManyToOne
+    private String accessToken;
+
+    private String refreshToken;
+
+    private Instant expiresAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 }

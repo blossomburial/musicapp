@@ -15,6 +15,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.*;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.*;
@@ -26,30 +29,28 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
-    private final OAuth2LoginSuccessHandler successHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             CustomUserDetailsService userDetailsService,
-            OAuth2LoginSuccessHandler successHandler,
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
             CustomOAuth2UserService customOAuth2UserService
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
-        this.successHandler = successHandler;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**", "/auth/**").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**", "/auth/**", "/oauth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -57,20 +58,23 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider())
                 .oauth2Login(oauth -> oauth
-                        .loginPage("/profile")
-                        .successHandler(successHandler)
+                        .loginPage("/profile/settings")
+                        .defaultSuccessUrl("/oauth2/callback/spotify", true)
+                        .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler((request, response, exception) -> {
-                            exception.printStackTrace(); // вывод ошибки в консоль
+                            exception.printStackTrace();
                             response.sendRedirect("/login?error=" + exception.getMessage());
                         })
-                        .userInfoEndpoint(info -> info
-                                .userService(customOAuth2UserService))
-                        .defaultSuccessUrl("/profile", true)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 
 
 
@@ -107,5 +111,11 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public OAuth2AuthorizedClientService authorizedClientService(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
     }
 }

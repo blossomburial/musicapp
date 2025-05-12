@@ -43,61 +43,33 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(
-            @RequestBody LoginDto userDto,
-            HttpServletResponse response,
-            HttpServletRequest request
+            @ModelAttribute LoginDto authRequest,
+            HttpServletResponse response
     ) {
-        authService.authenticate(
-                new UsernamePasswordAuthenticationToken(userDto.getUsername(), userDto.getPassword())
-        );
-        var userDetails = customUserDetailsService.loadUserByUsername(userDto.getUsername());
-        var jwt = jwtService.generateToken(userDetails);
-        return ResponseEntity.ok(new LoginResponse(jwt));
+        User user = authService.authenticate(authRequest);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+        String jwt = jwtService.generateToken(userDetails);
 
-//        User authenticatedUser = authService.authenticate(loginUserDto);
-//        System.out.println(authenticatedUser);
-//        String jwtToken = jwtService.generateToken(authenticatedUser);
-//
-//        Cookie jwtCookie = new Cookie("jwt", jwtToken);
-//        jwtCookie.setHttpOnly(true);
-//        jwtCookie.setPath("/");
-//        jwtCookie.setMaxAge((int) (jwtService.getExpirationTime() / 1000)); // в секундах
-//
-//        if (loginUserDto.getUsername() != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-//            UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginUserDto.getUsername());
-//
-//            if (jwtService.isTokenValid(jwtToken, userDetails)) {
-//                UsernamePasswordAuthenticationToken authToken =
-//                        new UsernamePasswordAuthenticationToken(
-//                                userDetails,
-//                                null,
-//                                userDetails.getAuthorities()
-//                        );
-//
-//                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                SecurityContextHolder.getContext().setAuthentication(authToken);
-//            }
-//        }
+        Cookie cookie = new Cookie("jwt", jwt);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) jwtService.getExpirationTime()); // в секундах
+        response.addCookie(cookie);
 
-
-
-        response.addCookie(jwtCookie);
-
-        return "redirect:/";
+        return ResponseEntity.status(HttpStatus.FOUND).header("Location", "/profile").build();
     }
 
-//    @PostMapping("/logout")
-//    public String logoutPage(HttpServletResponse response){
-//
-//        Cookie cookie = new Cookie("jwt", null);
-//        cookie.setHttpOnly(true);
-//        cookie.setPath("/");
-//        cookie.setMaxAge(0);
-//
-//        response.addCookie(cookie);
-//
-//        return "redirect:/";
-//    }
+    @PostMapping("/logout")
+    public String logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // удаляет cookie
+        response.addCookie(cookie);
+
+        return "redirect:/login";
+    }
+
 
     @GetMapping("/signup")
     public String showRegistrationPage(Model model) {

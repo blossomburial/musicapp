@@ -25,18 +25,27 @@ public class UserController {
     private final UserRepository userRepository;
 
     @GetMapping("/profile")
-    public String profile(Model model, Principal principal){
+    public String profile(Model model, Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
-        String username = principal.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
-
-        if (user != null) {
-            model.addAttribute("username", user.getUsername());
-            model.addAttribute("email", user.getEmail());
-            model.addAttribute("accountLinked", user.getTokens() != null);
-        }
+        model.addAttribute("user", user);
+        model.addAttribute("tokens", user.getTokens()); // это List<OAuthToken> после правки
         return "profile";
     }
+
+    @PostMapping("/profile/unlink/{provider}")
+    public String unlinkProvider(@PathVariable String provider, Principal principal) {
+        User user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+
+        user.removeTokenByProvider(provider);
+        userRepository.save(user);
+
+        return "redirect:/profile";
+    }
+
+
 
 
 
