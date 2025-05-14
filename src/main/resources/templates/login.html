@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></script>
-    <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-token-with-polyfills-latest.js"></script>
-</head>
-
-<body>
-<h2>Вход</h2>
-<form th:action="@{login}" th:object="${user}" method="post">
-    <label>username: <input type="text" name="username"/></label><br/>
-    <label>Пароль: <input type="password" name="password"/></label><br/>
-    <button type="submit">Войти</button>
-</form>
-</body>
+    <body>
+        <h2>Вход</h2>
+        <form th:action="@{login}" th:object="${user}" method="post">
+            <label>username: <input type="text" name="username"/></label><br/>
+            <label>пароль: <input type="password" name="password"/></label><br/>
+            <button type="submit">Войти</button>
+        </form>
+    </body>
 </html>

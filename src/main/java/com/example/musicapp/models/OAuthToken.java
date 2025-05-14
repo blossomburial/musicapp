@@ -2,6 +2,7 @@ package com.example.musicapp.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 import java.time.Instant;
 
@@ -21,7 +22,7 @@ public class OAuthToken {
 
     private String refreshToken;
 
-    private Instant expiresAt;
+    private Integer expiresIn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

@@ -13,16 +13,6 @@
     <title>Главная страница</title>
 </head>
 <body>
-
-<p>Текущий пользователь: <span sec:authentication="name">Гость</span></p>
-
-<div sec:authorize="isAuthenticated()">
-    <p>Вы вошли как: <span sec:authentication="name"></span></p>
-    <a th:href="@{logout}">Выйти</a>
-</div>
-<div sec:authorize="isAnonymous()">
-    <a th:href="@{login}">Войти</a>
-</div>
-
+    ваши плейлисты:
 </body>
 </html>

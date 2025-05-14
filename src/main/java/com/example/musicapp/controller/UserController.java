@@ -39,15 +39,10 @@ public class UserController {
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
-        user.removeTokenByProvider(provider);
         userRepository.save(user);
 
         return "redirect:/profile";
     }
-
-
-
-
 
     @GetMapping("/profile/settings")
     public String settingsPage(){

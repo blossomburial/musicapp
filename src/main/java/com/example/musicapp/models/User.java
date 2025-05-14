@@ -39,19 +39,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OAuthToken> tokens = new ArrayList<>();
 
-    public void addToken(String provider, OAuthToken token) {
-        tokens.add(token);
-        token.setUser(this);
-    }
-
-    public void removeTokenByProvider(String provider) {
-        tokens.removeIf(t -> {
-            boolean match = t.getProvider().equals(provider);
-            if (match) t.setUser(null);
-            return match;
-        });
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
