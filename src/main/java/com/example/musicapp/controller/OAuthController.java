@@ -37,6 +37,58 @@ public class OAuthController {
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
 
+    @GetMapping("/oauth2/refresh/spotify")
+    public String handleSpotifyRefreshCallback(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login?error=NoAuth";
+        }
+
+        User currentUser = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        Optional<OAuthToken> existingTokenOpt = tokenRepository.findByUserAndProvider(currentUser, "spotify");
+        String refreshToken;
+        OAuthToken token = existingTokenOpt.get();
+        refreshToken = token.getRefreshToken();
+
+        System.out.println(refreshToken);
+
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "refresh_token");
+        params.add("refresh_token", refreshToken);
+        params.add("client_id", clientId);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://accounts.spotify.com/api/token",
+                params,
+                Map.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return "redirect:/profile/settings?error=TokenError";
+        }
+
+        Map<String, Object> tokenData = response.getBody();
+        String accessToken = (String) tokenData.get("access_token");
+        refreshToken = (String) tokenData.get("refresh_token");
+        Integer expiresIn = (Integer) tokenData.get("expires_in");
+
+        token.setUser(currentUser);
+        token.setProvider("spotify");
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        token.setExpiresIn(expiresIn);
+        tokenRepository.save(token);
+
+        return "redirect:/profile";
+    }
+
     @GetMapping("/oauth2/authorize/spotify")
     public void redirectToSpotify(HttpServletResponse response) throws IOException {
         String url = "https://accounts.spotify.com/authorize"

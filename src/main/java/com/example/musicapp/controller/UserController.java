@@ -7,6 +7,7 @@ import com.example.musicapp.repositories.UserRepository;
 import com.example.musicapp.repositories.ExternalServiceRepository;
 import com.example.musicapp.models.User;
 import com.example.musicapp.services.AuthService;
+import com.example.musicapp.services.SpotifyAPIService;
 import com.example.musicapp.services.UserService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +18,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
 public class UserController {
     private final ExternalServiceRepository externalServiceRepository;
     private final UserRepository userRepository;
+    private final SpotifyAPIService spotifyService;
 
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
@@ -30,7 +34,7 @@ public class UserController {
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
         model.addAttribute("user", user);
-        model.addAttribute("tokens", user.getTokens()); // это List<OAuthToken> после правки
+        model.addAttribute("tokens", user.getTokens());
         return "profile";
     }
 
@@ -47,6 +51,12 @@ public class UserController {
     @GetMapping("/profile/settings")
     public String settingsPage(){
         return "settings";
+    }
+    @GetMapping("/playlists")
+    public String playlists(Model model) {
+        List<Map<String, Object>> playlists = spotifyService.getUserPlaylists();
+        model.addAttribute("playlists", playlists);
+        return "playlists";
     }
 
 }

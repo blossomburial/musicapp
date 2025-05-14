@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spotify Playlists</title>
+</head>
+<body>
+<h1>Твои плейлисты</h1>
+<div th:if="${playlists.isEmpty()}">
+    <p>Нет плейлистов :(</p>
+</div>
+<div th:each="playlist : ${playlists}">
+    <h2>
+        <a th:text="${playlist.name}" th:href="${playlist.href}"> </a>
+    </h2>
+    <img th:src="${playlist.images[0].url}" alt="Cover" width="200" th:if="${playlist.images != null and !playlist.images.isEmpty()}"/>
+    <p th:text="'Треки: ' + ${playlist.tracks.total}">Track count</p>
+</div>
+</body>
+</html>

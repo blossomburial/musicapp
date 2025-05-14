@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -15,8 +16,13 @@ public class SpotifyAPIController {
     private final SpotifyAPIService spotifyService;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentSpotifyUser() {
-        Map<String, Object> userProfile = spotifyService.getCurrentUser();
-        return ResponseEntity.ok(userProfile);
+    public String getSpotifyMe() throws IOException, InterruptedException {
+        return spotifyService.getCurrentUser();
     }
+
+    @GetMapping("/playlists")
+    public ResponseEntity<?> getUserPlaylists() {
+        return ResponseEntity.ok(spotifyService.getUserPlaylists());
+    }
+
 }
