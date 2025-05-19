@@ -1,5 +1,6 @@
 package com.example.musicapp.controller;
 
+import com.example.musicapp.dtos.PlaylistInfo;
 import com.example.musicapp.dtos.RegistrationDto;
 import com.example.musicapp.dtos.LoginDto;
 import com.example.musicapp.models.ExternalService;
@@ -9,6 +10,7 @@ import com.example.musicapp.models.User;
 import com.example.musicapp.services.AuthService;
 import com.example.musicapp.services.SpotifyAPIService;
 import com.example.musicapp.services.UserService;
+import com.example.musicapp.services.YandexAPIService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,7 @@ public class UserController {
     private final ExternalServiceRepository externalServiceRepository;
     private final UserRepository userRepository;
     private final SpotifyAPIService spotifyService;
+    private final YandexAPIService yandexService;
 
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
@@ -52,11 +56,40 @@ public class UserController {
     public String settingsPage(){
         return "settings";
     }
+
     @GetMapping("/playlists")
-    public String playlists(Model model) {
-        List<Map<String, Object>> playlists = spotifyService.getUserPlaylists();
-        model.addAttribute("playlists", playlists);
+    public String playlists(Model model)  throws IOException, InterruptedException{
+        List<Map<String, Object>> spotifyPlaylists = spotifyService.getUsersPlaylists();
+
+        List<Map<String, Object>> yandexPlaylists = yandexService.getUsersPlaylists();
+
+        model.addAttribute("spotifyPlaylists", spotifyPlaylists);
+        model.addAttribute("yandexPlaylists", yandexPlaylists);
+
+        System.out.println(spotifyPlaylists);
+        System.out.println(yandexPlaylists);
+
+
         return "playlists";
     }
+
+    @GetMapping("/playlist/{id}")
+    public String showPlaylistTracks(@PathVariable("id") String playlistId, @RequestParam("platform") String platform, Model model) throws IOException, InterruptedException {
+
+
+        List<PlaylistInfo> tracks = switch (platform.toLowerCase()) {
+            case "spotify" -> spotifyService.getPlaylistTracks(playlistId);
+            case "yandex" -> yandexService.getPlaylistTracks(playlistId);
+            default -> List.of();
+        };
+
+        model.addAttribute("tracks", tracks);
+
+
+
+        return "playlist";
+    }
+
+
 
 }

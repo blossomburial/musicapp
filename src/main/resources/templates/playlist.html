@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Треки из плейлиста</title>
+</head>
+<body>
+<h1>Треки</h1>
+<div th:each="item : ${tracks}">
+    <p th:text="${item.track.name}">Track Name</p>
+    <p th:text="${item.track.artists[0].name}">Artist</p>
+    <audio controls th:src="${item.track.preview_url}" th:if="${item.track.preview_url != null}">Your browser doesn't support audio</audio>
+    <hr/>
+</div>
+<a href="/playlists">← Назад к плейлистам</a>
+</body>
+</html>

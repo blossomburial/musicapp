@@ -3,9 +3,11 @@ package com.example.musicapp.controller;
 import com.example.musicapp.services.SpotifyAPIService;
 import lombok.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,7 +24,8 @@ public class SpotifyAPIController {
 
     @GetMapping("/playlists")
     public ResponseEntity<?> getUserPlaylists() {
-        return ResponseEntity.ok(spotifyService.getUserPlaylists());
+        return ResponseEntity.ok(spotifyService.getUsersPlaylists());
     }
+
 
 }

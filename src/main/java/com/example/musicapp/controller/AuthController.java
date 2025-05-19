@@ -2,23 +2,17 @@ package com.example.musicapp.controller;
 
 import com.example.musicapp.dtos.*;
 import com.example.musicapp.models.User;
-import com.example.musicapp.responses.LoginResponse;
-import com.example.musicapp.services.CustomOAuth2UserService;
 import com.example.musicapp.services.CustomUserDetailsService;
 import com.example.musicapp.services.JwtService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;

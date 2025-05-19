@@ -2,12 +2,11 @@ package com.example.musicapp.services;
 
 import com.example.musicapp.dtos.PlaylistInfo;
 import com.example.musicapp.models.OAuthToken;
-import com.example.musicapp.dtos.SpotifyPlaylistInfo;
+import com.example.musicapp.dtos.YandexPlaylistInfo;
 import com.example.musicapp.models.User;
 import com.example.musicapp.repositories.TokenRepository;
 import com.example.musicapp.repositories.UserRepository;
-import lombok.*;
-import org.json.JSONObject;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,13 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,8 +30,8 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class SpotifyAPIService {
-    @Value("${spotify.api-url}")
+public class YandexAPIService {
+    @Value("${yandex.api-url}")
     private String apiUrl;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
@@ -43,15 +39,10 @@ public class SpotifyAPIService {
     RestTemplate restTemplate = new RestTemplate();
 
     private String getUserId(String token) throws IOException, InterruptedException{
-        ProxySelector proxySelector = ProxySelector.of(new InetSocketAddress("34.216.237.152", 3128));
 
-        HttpClient client = HttpClient.newBuilder()
-                .proxy(proxySelector)
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
-
+        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl + "/me"))
+                .uri(URI.create("https://login.yandex.ru/info?"))
                 .header("Authorization", "Bearer " + token)
                 .header("Accept", "application/json")
                 .GET()
@@ -62,13 +53,11 @@ public class SpotifyAPIService {
 
         String id_strip = response.body().substring(response.body().indexOf("id"));
 
-        String uid = id_strip.substring(5, id_strip.indexOf("\","));
-
-        return uid;
+        return id_strip.substring(6, id_strip.indexOf("\","));
     }
 
+    public String getCurrentUser() throws IOException, InterruptedException{
 
-    public String getCurrentUser() throws IOException, InterruptedException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         User user = userRepository.findByUsername(username).orElse(null);
@@ -76,14 +65,14 @@ public class SpotifyAPIService {
             throw new RuntimeException("User not found");
         }
 
-        Optional<OAuthToken> spotifyTokens = tokenRepository.findByUserAndProvider(user, "spotify");
+        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
 
-        String accessToken = spotifyTokens.get().getAccessToken();
-        String refreshToken = spotifyTokens.get().getRefreshToken();
+        String accessToken = yandexTokens.get().getAccessToken();
+        String refreshToken = yandexTokens.get().getRefreshToken();
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl + "/me"))
+                .uri(URI.create("https://login.yandex.ru/info?"))
                 .header("Authorization", "Bearer " + accessToken)
                 .header("Accept", "application/json")
                 .GET()
@@ -95,74 +84,84 @@ public class SpotifyAPIService {
         return response.body();
     }
 
-    public List<Map<String, Object>> getUsersPlaylists() {
+    public List<Map<String, Object>> getUsersPlaylists() throws IOException, InterruptedException {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
 
-        System.out.println("1");
+        String accessToken = yandexTokens.get().getAccessToken();
+        String refreshToken = yandexTokens.get().getRefreshToken();
 
-        OAuthToken token = tokenRepository.findByUserAndProvider(user, "spotify")
-                .orElseThrow(() -> new RuntimeException("Spotify token not found"));
+        String uid = getUserId(accessToken);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token.getAccessToken());
+        headers.set("Authorization", "OAuth " + accessToken);
+        headers.set("Accept", "application/json");
+
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<Map> response = restTemplate.exchange(
-                "https://api.spotify.com/v1/me/playlists",
+                "https://api.music.yandex.net/users/" + uid + "/playlists/list",
                 HttpMethod.GET,
                 request,
                 Map.class
         );
 
         Map<String, Object> body = response.getBody();
-        if (body == null || !body.containsKey("items")) {
+        if (body == null || !body.containsKey("result")) {
             return List.of();
         }
 
-        return (List<Map<String, Object>>) body.get("items");
+        return (List<Map<String, Object>>) body.get("result");
     }
 
-    public List<PlaylistInfo> getPlaylistTracks(String playlistId) {
+    public List<PlaylistInfo> getPlaylistTracks(String playlistId) throws IOException, InterruptedException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        OAuthToken token = tokenRepository.findByUserAndProvider(user, "spotify")
-                .orElseThrow(() -> new RuntimeException("Spotify token not found"));
+        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
+
+        String accessToken = yandexTokens.get().getAccessToken();
+        String refreshToken = yandexTokens.get().getRefreshToken();
+
+        String uid = getUserId(accessToken);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token.getAccessToken());
+        headers.set("Authorization", "OAuth " + accessToken);
+        headers.set("Accept", "application/json");
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        ResponseEntity<Map> response = restTemplate.exchange(
-                "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks",
+        ResponseEntity<YandexPlaylistInfo> response = restTemplate.exchange(
+                apiUrl + "/users/" + uid + "/playlists/" + playlistId,
                 HttpMethod.GET,
                 request,
-                Map.class
+                YandexPlaylistInfo.class
         );
 
-        System.out.println(response);
-//
-//        List<PlaylistInfo> spotifyTracks = Objects.requireNonNull(response.getBody())
-//                .getTracks().getItems().stream()
-//                .map(item -> convertSpotifyTrack(item.getTrack()))
-//                .collect(Collectors.toList());
-//
-//        System.out.println(spotifyTracks);
+        List<PlaylistInfo> yandexTracks = Objects.requireNonNull(response.getBody())
+                .getTracks().stream()
+                .map(this::convertYandexTrack)
+                .collect(Collectors.toList());
+
+        System.out.println(yandexTracks);
+
         return null;
-//        return spotifyTracks;
-    }
-    public PlaylistInfo convertSpotifyTrack(SpotifyPlaylistInfo.Tracks.Item.Track spotifyTrack) {
-        PlaylistInfo dto = new PlaylistInfo();
-        dto.setId(spotifyTrack.getId());
-        dto.setTitle(spotifyTrack.getName());
-        dto.setArtist(spotifyTrack.getArtists().get(0).getName());
-        dto.setDurationSec(spotifyTrack.getDuration_ms() / 1000);
-        return dto;
+//        return yandexTracks;
     }
 
+    public PlaylistInfo convertYandexTrack(YandexPlaylistInfo.Track yandexTrack) {
+        PlaylistInfo dto = new PlaylistInfo();
+        dto.setId(String.valueOf(yandexTrack.getId()));
+        dto.setTitle(yandexTrack.getTitle());
+        dto.setArtist(yandexTrack.getArtists().get(0).getName());
+        dto.setDurationSec(yandexTrack.getDurationMs() / 1000);
+        return dto;
+    }
 }

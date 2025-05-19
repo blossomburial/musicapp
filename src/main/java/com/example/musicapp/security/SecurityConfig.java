@@ -1,7 +1,6 @@
 package com.example.musicapp.security;
 
 
-import com.example.musicapp.services.CustomOAuth2UserService;
 import com.example.musicapp.services.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

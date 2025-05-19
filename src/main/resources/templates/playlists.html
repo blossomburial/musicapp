@@ -5,15 +5,23 @@
 </head>
 <body>
 <h1>Твои плейлисты</h1>
-<div th:if="${playlists.isEmpty()}">
+<div th:if="${spotifyPlaylists.isEmpty() and yandexPlaylists.isEmpty()}">
     <p>Нет плейлистов :(</p>
 </div>
-<div th:each="playlist : ${playlists}">
+<div th:each="sPlaylist : ${spotifyPlaylists}">
     <h2>
-        <a th:text="${playlist.name}" th:href="${playlist.href}"> </a>
+        <a th:text="${sPlaylist.name}" th:href="@{/playlist/{id}(id=${sPlaylist.id}, platform='spotify')}"> </a>
     </h2>
-    <img th:src="${playlist.images[0].url}" alt="Cover" width="200" th:if="${playlist.images != null and !playlist.images.isEmpty()}"/>
-    <p th:text="'Треки: ' + ${playlist.tracks.total}">Track count</p>
+    <img th:src="${sPlaylist.images[0].url}" alt="Cover" width="200" th:if="${sPlaylist.images != null and !sPlaylist.images.isEmpty()}"/>
+    <p th:text="'Треки: ' + ${sPlaylist.tracks.total}">Track count</p>
+</div>
+
+<div th:each="yPlaylist : ${yandexPlaylists}">
+    <h2>
+        <a th:text="${yPlaylist.title}" th:href="@{/playlist/{id}(id=${yPlaylist.kind}, platform='yandex')}"> </a>
+    </h2>
+<!--    <img th:src="${yPlaylist.images[0].url}" alt="Cover" width="200" th:if="${yPlaylist.images != null and !yPlaylist.images.isEmpty()}"/>-->
+    <p th:text="'Треки: ' + ${yPlaylist.trackCount}">Track count</p>
 </div>
 </body>
 </html>
