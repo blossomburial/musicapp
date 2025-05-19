@@ -1,8 +1,8 @@
 package com.example.musicapp.controller;
 
-import com.example.musicapp.dtos.PlaylistInfo;
 import com.example.musicapp.dtos.RegistrationDto;
 import com.example.musicapp.dtos.LoginDto;
+import com.example.musicapp.dtos.TrackDto;
 import com.example.musicapp.models.ExternalService;
 import com.example.musicapp.repositories.UserRepository;
 import com.example.musicapp.repositories.ExternalServiceRepository;
@@ -13,6 +13,7 @@ import com.example.musicapp.services.UserService;
 import com.example.musicapp.services.YandexAPIService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
@@ -24,6 +25,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class UserController {
@@ -59,33 +61,28 @@ public class UserController {
 
     @GetMapping("/playlists")
     public String playlists(Model model)  throws IOException, InterruptedException{
-        List<Map<String, Object>> spotifyPlaylists = spotifyService.getUsersPlaylists();
+        log.info("/playlists");
 
+        List<Map<String, Object>> spotifyPlaylists = spotifyService.getUsersPlaylists();
         List<Map<String, Object>> yandexPlaylists = yandexService.getUsersPlaylists();
 
         model.addAttribute("spotifyPlaylists", spotifyPlaylists);
         model.addAttribute("yandexPlaylists", yandexPlaylists);
-
-        System.out.println(spotifyPlaylists);
-        System.out.println(yandexPlaylists);
-
 
         return "playlists";
     }
 
     @GetMapping("/playlist/{id}")
     public String showPlaylistTracks(@PathVariable("id") String playlistId, @RequestParam("platform") String platform, Model model) throws IOException, InterruptedException {
+        log.info("/playlist/id");
 
-
-        List<PlaylistInfo> tracks = switch (platform.toLowerCase()) {
+        List<TrackDto> tracks = switch (platform.toLowerCase()) {
             case "spotify" -> spotifyService.getPlaylistTracks(playlistId);
             case "yandex" -> yandexService.getPlaylistTracks(playlistId);
             default -> List.of();
         };
 
         model.addAttribute("tracks", tracks);
-
-
 
         return "playlist";
     }

@@ -43,8 +43,6 @@ public class AuthService {
     public User authenticate(LoginDto input) {
         Optional<User> optionalUser = userRepository.findByUsername(input.getUsername());
 
-        System.out.println(optionalUser);
-
         if (optionalUser.isEmpty()) {
             throw new UsernameNotFoundException("Пользователь не найден с username: " + input.getUsername());
         }

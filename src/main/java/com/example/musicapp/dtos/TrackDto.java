@@ -1,15 +1,18 @@
 package com.example.musicapp.dtos;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+@Data
 @Getter
 @Setter
-@Data
-public class PlaylistInfo {
+@AllArgsConstructor
+public class TrackDto {
     private String id;
     private String title;
     private String artist;
-    private int durationSec;
+    private String album;
+    private String coverUrl;
 }

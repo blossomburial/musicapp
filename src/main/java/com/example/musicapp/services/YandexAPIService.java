@@ -1,12 +1,13 @@
 package com.example.musicapp.services;
 
-import com.example.musicapp.dtos.PlaylistInfo;
+import com.example.musicapp.dtos.TrackDto;
 import com.example.musicapp.models.OAuthToken;
 import com.example.musicapp.dtos.YandexPlaylistInfo;
 import com.example.musicapp.models.User;
 import com.example.musicapp.repositories.TokenRepository;
 import com.example.musicapp.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,12 +23,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class YandexAPIService {
@@ -85,6 +84,8 @@ public class YandexAPIService {
     }
 
     public List<Map<String, Object>> getUsersPlaylists() throws IOException, InterruptedException {
+        log.info("yandex getUsersPlaylists");
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         User user = userRepository.findByUsername(username).orElse(null);
@@ -102,8 +103,10 @@ public class YandexAPIService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "OAuth " + accessToken);
         headers.set("Accept", "application/json");
+        headers.set("X-Yandex-Music-Client", "YandexMusicAPI");
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
+
 
         ResponseEntity<Map> response = restTemplate.exchange(
                 "https://api.music.yandex.net/users/" + uid + "/playlists/list",
@@ -111,6 +114,7 @@ public class YandexAPIService {
                 request,
                 Map.class
         );
+
 
         Map<String, Object> body = response.getBody();
         if (body == null || !body.containsKey("result")) {
@@ -120,7 +124,7 @@ public class YandexAPIService {
         return (List<Map<String, Object>>) body.get("result");
     }
 
-    public List<PlaylistInfo> getPlaylistTracks(String playlistId) throws IOException, InterruptedException {
+    public List<TrackDto> getPlaylistTracks(String playlistId) throws IOException, InterruptedException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -135,33 +139,56 @@ public class YandexAPIService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "OAuth " + accessToken);
         headers.set("Accept", "application/json");
+        headers.set("X-Yandex-Music-Client", "YandexMusicAPI");
+
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        ResponseEntity<YandexPlaylistInfo> response = restTemplate.exchange(
+        ResponseEntity<Map> response = restTemplate.exchange(
                 apiUrl + "/users/" + uid + "/playlists/" + playlistId,
                 HttpMethod.GET,
                 request,
-                YandexPlaylistInfo.class
+                Map.class
         );
 
-        List<PlaylistInfo> yandexTracks = Objects.requireNonNull(response.getBody())
-                .getTracks().stream()
-                .map(this::convertYandexTrack)
-                .collect(Collectors.toList());
+        Map<?, ?> body = response.getBody();
+        if (body == null || !body.containsKey("result")) return List.of();
 
-        System.out.println(yandexTracks);
 
-        return null;
-//        return yandexTracks;
+        Map<String, Object> result = (Map<String, Object>) body.get("result");
+
+
+        List<Map<String, Object>> tracks = (List<Map<String, Object>>) result.get("tracks");
+
+
+        List<TrackDto> trackDtos = new ArrayList<>();
+
+        for (Map<String, Object> trackItem : tracks) {
+            Map<String, Object> track = (Map<String, Object>) trackItem.get("track");
+
+            String id = (String) track.get("id");
+
+            String title = (String) track.get("title");
+
+            List<Map<String, Object>> artists = (List<Map<String, Object>>) track.get("artists");
+            String artist = artists != null && !artists.isEmpty() ? artists.get(0).get("name").toString() : "Unknown";
+
+            List<Map<String, Object>> albums = (List<Map<String, Object>>) track.get("albums");
+            String album = albums != null && !albums.isEmpty() ? albums.get(0).get("title").toString() : "Unknown Album";
+
+            String cover = null;
+            if (albums != null && !albums.isEmpty()) {
+                Map<String, Object> coverMap = (Map<String, Object>) albums.get(0).get("cover");
+                if (coverMap != null) {
+                    cover = "https://" + coverMap.toString().substring(coverMap.toString().indexOf("avatars")).replace("%%}", "200x200");
+                }
+            }
+
+
+            trackDtos.add(new TrackDto(id, title, artist, album, cover));
+        }
+
+        return trackDtos;
     }
 
-    public PlaylistInfo convertYandexTrack(YandexPlaylistInfo.Track yandexTrack) {
-        PlaylistInfo dto = new PlaylistInfo();
-        dto.setId(String.valueOf(yandexTrack.getId()));
-        dto.setTitle(yandexTrack.getTitle());
-        dto.setArtist(yandexTrack.getArtists().get(0).getName());
-        dto.setDurationSec(yandexTrack.getDurationMs() / 1000);
-        return dto;
-    }
 }

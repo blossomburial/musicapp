@@ -5,12 +5,11 @@
 </head>
 <body>
 <h1>Треки</h1>
-<div th:each="item : ${tracks}">
-    <p th:text="${item.track.name}">Track Name</p>
-    <p th:text="${item.track.artists[0].name}">Artist</p>
-    <audio controls th:src="${item.track.preview_url}" th:if="${item.track.preview_url != null}">Your browser doesn't support audio</audio>
-    <hr/>
-</div>
+<li th:each="track : ${tracks}">
+    <img th:src="${track.coverUrl}" width="50"/>
+    <strong th:text="${track.title}"></strong>
+    <span th:text="' — ' + ${track.artist} + ' (' + ${track.album} + ')'"></span>
+</li>
 <a href="/playlists">← Назад к плейлистам</a>
 </body>
 </html>

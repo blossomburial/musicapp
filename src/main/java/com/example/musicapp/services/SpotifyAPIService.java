@@ -1,12 +1,13 @@
 package com.example.musicapp.services;
 
-import com.example.musicapp.dtos.PlaylistInfo;
+import com.example.musicapp.dtos.TrackDto;
 import com.example.musicapp.models.OAuthToken;
 import com.example.musicapp.dtos.SpotifyPlaylistInfo;
 import com.example.musicapp.models.User;
 import com.example.musicapp.repositories.TokenRepository;
 import com.example.musicapp.repositories.UserRepository;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,12 +27,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SpotifyAPIService {
@@ -62,9 +61,7 @@ public class SpotifyAPIService {
 
         String id_strip = response.body().substring(response.body().indexOf("id"));
 
-        String uid = id_strip.substring(5, id_strip.indexOf("\","));
-
-        return uid;
+        return id_strip.substring(5, id_strip.indexOf("\","));
     }
 
 
@@ -101,8 +98,6 @@ public class SpotifyAPIService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        System.out.println("1");
-
         OAuthToken token = tokenRepository.findByUserAndProvider(user, "spotify")
                 .orElseThrow(() -> new RuntimeException("Spotify token not found"));
 
@@ -117,7 +112,11 @@ public class SpotifyAPIService {
                 Map.class
         );
 
+
+
         Map<String, Object> body = response.getBody();
+
+
         if (body == null || !body.containsKey("items")) {
             return List.of();
         }
@@ -125,7 +124,7 @@ public class SpotifyAPIService {
         return (List<Map<String, Object>>) body.get("items");
     }
 
-    public List<PlaylistInfo> getPlaylistTracks(String playlistId) {
+    public List<TrackDto> getPlaylistTracks(String playlistId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -134,8 +133,7 @@ public class SpotifyAPIService {
                 .orElseThrow(() -> new RuntimeException("Spotify token not found"));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token.getAccessToken());
-
+        headers.set("Authorization", "Bearer " + token.getAccessToken());
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<Map> response = restTemplate.exchange(
@@ -145,24 +143,24 @@ public class SpotifyAPIService {
                 Map.class
         );
 
-        System.out.println(response);
-//
-//        List<PlaylistInfo> spotifyTracks = Objects.requireNonNull(response.getBody())
-//                .getTracks().getItems().stream()
-//                .map(item -> convertSpotifyTrack(item.getTrack()))
-//                .collect(Collectors.toList());
-//
-//        System.out.println(spotifyTracks);
-        return null;
-//        return spotifyTracks;
-    }
-    public PlaylistInfo convertSpotifyTrack(SpotifyPlaylistInfo.Tracks.Item.Track spotifyTrack) {
-        PlaylistInfo dto = new PlaylistInfo();
-        dto.setId(spotifyTrack.getId());
-        dto.setTitle(spotifyTrack.getName());
-        dto.setArtist(spotifyTrack.getArtists().get(0).getName());
-        dto.setDurationSec(spotifyTrack.getDuration_ms() / 1000);
-        return dto;
-    }
+        Map<?, ?> body = response.getBody();
 
+        if (body == null || !body.containsKey("items")) return List.of();
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) body.get("items");
+
+        List<TrackDto> result = new ArrayList<>();
+
+        for (Map<String, Object> item : items) {
+            Map<String, Object> track = (Map<String, Object>) item.get("track");
+            String id = (String) track.get("id");
+            String title = (String) track.get("name");
+            String artist = ((Map<String, Object>) ((List<?>) track.get("artists")).get(0)).get("name").toString();
+            String album = ((Map<String, Object>) track.get("album")).get("name").toString();
+            String coverUrl = ((Map<String, Object>) ((List<?>) ((Map<?, ?>) track.get("album")).get("images")).get(0)).get("url").toString();
+
+            result.add(new TrackDto(id, title, artist, album, coverUrl));
+        }
+        return result;
+    }
 }
