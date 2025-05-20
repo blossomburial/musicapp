@@ -10,12 +10,11 @@ import lombok.*;
 @NoArgsConstructor
 public class Track {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "track_id")
-    private Long id;
+    private String id;
 
-    @Column(name = "title")
-    private String title;
+    @Column(name = "track_url")
+    private String trackURL;
 
     @Column(name = "platform")
     private String platform;

@@ -126,6 +126,7 @@ public class YandexAPIService {
 
     public List<TrackDto> getPlaylistTracks(String playlistId) throws IOException, InterruptedException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -183,7 +184,6 @@ public class YandexAPIService {
                     cover = "https://" + coverMap.toString().substring(coverMap.toString().indexOf("avatars")).replace("%%}", "200x200");
                 }
             }
-
 
             trackDtos.add(new TrackDto(id, title, artist, album, cover));
         }

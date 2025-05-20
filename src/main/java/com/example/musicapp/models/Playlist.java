@@ -28,9 +28,6 @@ public class Playlist {
     )
     private Set<Track> tracks;
 
-    @Column(name = "platform")
-    private String platform;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User author;

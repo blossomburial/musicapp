@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SongRepository extends JpaRepository<Track, Long> {
-    List<Track> findByTitle(String title);
+public interface TrackRepository extends JpaRepository<Track, Long> {
+    List<Track> findById(String id);
 }

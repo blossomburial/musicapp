@@ -46,6 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String token = extractTokenFromRequest(request);
+            System.out.println("JwtAuthenticationFilter triggered");
+
+            if (token != null) {
+                System.out.println("Token found: " + token);
+            }
 
             if (token != null) {
                 String userEmail = jwtService.extractUsername(token);
@@ -64,18 +69,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
-            handlerExceptionResolver.resolveException(request, response, null, ex);
+            System.out.println(ex);
+
+            SecurityContextHolder.clearContext();
+
+            String accept = request.getHeader("Accept");
+            if (accept != null && accept.contains("text/html")) {
+                response.sendRedirect("/login");
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Unauthorized\"}");
+            }
         }
     }
 
     private String extractTokenFromRequest(HttpServletRequest request) {
-        // Сначала пробуем из заголовка Authorization
         final String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
-        // Если нет — пробуем из cookie
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {

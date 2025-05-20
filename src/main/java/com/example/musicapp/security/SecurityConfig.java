@@ -35,16 +35,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**", "/favicon.ico", "/playlist/**", "/playlists").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/error", "/api/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .formLogin(login -> login
-                        .successHandler(oAuth2LoginSuccessHandler)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((req, res, ex) -> res.sendRedirect("/login"))
                 )
+                .formLogin(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -76,7 +77,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8090/"));
+        configuration.setAllowedOrigins(List.of("http://localhost:8090"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

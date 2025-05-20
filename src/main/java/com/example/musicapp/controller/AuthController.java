@@ -45,7 +45,7 @@ public class AuthController {
         Cookie cookie = new Cookie("jwt", jwt);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge((int) jwtService.getExpirationTime()); // в секундах
+        cookie.setMaxAge((int) jwtService.getExpirationTime());
         response.addCookie(cookie);
 
         return ResponseEntity.status(HttpStatus.FOUND).header("Location", "/profile").build();
