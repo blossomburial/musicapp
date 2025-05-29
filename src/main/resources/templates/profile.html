@@ -1,36 +1,30 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Профиль</title>
+    <meta charset="UTF-8">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 </head>
 <body>
-<h1>Профиль пользователя</h1>
 
-<p><strong>Имя пользователя:</strong> <span th:text="${user.username}"></span></p>
-<p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+<header class="profile-header">
+    <div class="profile-info">
+        <img class="avatar" src="https://i.pinimg.com/736x/8b/5c/5f/8b5c5fc90e812b6a6dfcad8e881bd81f.jpg" alt="Avatar" />
+        <div>
+            <h1 th:text="${user.username}">Имя пользователя</h1>
+            <p th:text="${user.email}">Email</p>
+        </div>
+    </div>
+</header>
 
-<h2>Привязанные аккаунты</h2>
-<table>
-    <thead>
-    <tr>
-        <th>Провайдер</th>
-        <th>Access Token</th>
-        <th>Действия</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="token : ${tokens}">
-        <td th:text="${token.provider}">Provider</td>
-        <td th:text="${token.accessToken}">Token</td>
-        <td>
-            <form th:action="@{'/profile/unlink/' + ${token.provider}}" method="post">
-                <button type="submit">Удалить</button>
-            </form>
-        </td>
-    </tr>
-    </tbody>
-</table>
 
+    <section class="profile-section">
+        <h2>Настройки</h2>
+        <button class="btn">Изменить профиль</button>
+        <button class="btn logout">Выйти</button>
+    </section>
+</main>
 
 </body>
 </html>

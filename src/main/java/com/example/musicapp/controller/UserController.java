@@ -40,19 +40,6 @@ public class UserController {
         return "settings";
     }
 
-    @GetMapping("/playlists")
-    public String playlists(Model model)  throws IOException, InterruptedException{
-        log.info("/playlists was called");
-
-        List<Map<String, Object>> spotifyPlaylists = spotifyService.getUsersPlaylists();
-        List<Map<String, Object>> yandexPlaylists = yandexService.getUsersPlaylists();
-
-        model.addAttribute("spotifyPlaylists", spotifyPlaylists);
-        model.addAttribute("yandexPlaylists", yandexPlaylists);
-
-        return "playlists";
-    }
-
     @GetMapping("/playlist/{id}")
     public String showPlaylistTracks(@PathVariable("id") String playlistId, @RequestParam("platform") String platform, Model model) throws IOException, InterruptedException {
         log.info("/playlist/id was called");

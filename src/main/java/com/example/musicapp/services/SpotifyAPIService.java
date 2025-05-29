@@ -5,11 +5,10 @@ import com.example.musicapp.models.OAuthToken;
 import com.example.musicapp.models.User;
 import com.example.musicapp.repositories.TokenRepository;
 import com.example.musicapp.repositories.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -158,20 +157,25 @@ public class SpotifyAPIService {
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        JSONObject json = new JSONObject(response.body());
 
-        JSONArray items = json.getJSONObject("tracks").getJSONArray("items");
-        List<TrackDto> result = new ArrayList<>();
-        for (int i = 0; i < items.length(); i++) {
-            JSONObject item = items.getJSONObject(i);
-            TrackDto track = new TrackDto();
-            track.setId(item.getString("id"));
-            track.setTitle(item.getString("name"));
-            track.setArtist(item.getJSONArray("artists").getJSONObject(0).getString("name"));
-            track.setAlbum(item.getJSONObject("album").getString("name"));
-            track.setCoverUrl(item.getJSONObject("album").getJSONArray("images").getJSONObject(0).getString("url"));
-            result.add(track);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode root = objectMapper.readTree(response.body());
+
+        JsonNode tracksNode = root.path("tracks").path("items");
+
+        List<TrackDto> tracks = new ArrayList<>();
+
+        for (JsonNode item : tracksNode) {
+            String trackId = item.path("id").asText();
+            String title = item.path("name").asText();
+            String artist = item.path("artists").get(0).path("name").asText();
+            String album = item.path("album").path("name").asText();
+            String coverUrl = "";
+
+
+            tracks.add(new TrackDto(trackId, title, artist, album, coverUrl));
+
         }
-        return result;
+        return tracks;
     }
 }

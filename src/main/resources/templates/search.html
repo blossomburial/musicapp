@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск треков</title>
+    <link rel="stylesheet" th:href="@{/css/search.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <script src="/js/scripts.js"></script>
+</head>
+<body>
+
+<header class="search-header">
+    <h1>Поиск музыки</h1>
+    <input type="text" id="searchQuery" placeholder="Введите название трека" />
+    <button onclick="searchTracks()">Поиск</button>
+</header>
+<div id="results"></div>
+
+</body>
+</html>

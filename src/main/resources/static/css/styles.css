@@ -1,0 +1,71 @@
+/* Основной фон и шрифт */
+body {
+    background-color: #121212;
+    color: #FFFFFF;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Заголовок страницы */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #1DB954;
+}
+
+/* Заголовки плейлистов */
+h2 {
+    font-size: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Ссылки на плейлисты */
+a {
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #1DB954;
+}
+
+/* Изображения обложек */
+img {
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin-bottom: 0.5rem;
+}
+
+/* Контейнер плейлистов — скроллируемый */
+.playlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Разделы для Spotify и Yandex */
+.spotify-section, .yandex-section {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #1DB954 transparent;
+}
+
+.playlist-card {
+    min-width: 200px;
+    background-color: #181818;
+    padding: 10px;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+p {
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    margin: 0.3rem 0;
+}

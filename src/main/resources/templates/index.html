@@ -1,20 +1,31 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-    <meta charset="UTF-8">
-    <title>Главная страница</title>
+    <title>Spotify Playlists</title>
 </head>
 <body>
-<p>Текущий пользователь: <span sec:authentication="name">Гость</span></p>
+<section layout:fragment="content">
+    <h1>Твои плейлисты</h1>
+    <div th:if="${spotifyPlaylists.isEmpty() and yandexPlaylists.isEmpty()}">
+        <p>Нет плейлистов :(</p>
+    </div>
+    <div th:each="sPlaylist : ${spotifyPlaylists}">
+        <h2>
+            <a th:text="${sPlaylist.name}" th:href="@{/playlist/{id}(id=${sPlaylist.id}, platform='spotify')}"> </a>
+        </h2>
+        <img th:src="${sPlaylist.images[0].url}" alt="Cover" width="200" th:if="${sPlaylist.images != null and !sPlaylist.images.isEmpty()}"/>
+        <p th:text="'Треки: ' + ${sPlaylist.tracks.total}">Track count</p>
+    </div>
 
-<div sec:authorize="isAuthenticated()">
-    <p>Вы вошли как: <span sec:authentication="name"></span></p>
-    <a th:href="@{logout}">Выйти</a>
-</div>
-<div sec:authorize="isAnonymous()">
-    <a th:href="@{login}">Войти</a>
-</div>
+    <div th:each="yPlaylist : ${yandexPlaylists}">
+        <h2>
+            <a th:text="${yPlaylist.title}" th:href="@{/playlist/{id}(id=${yPlaylist.kind}, platform='yandex')}"> </a>
+        </h2>
+        <!--    <img th:src="${yPlaylist.images[0].url}" alt="Cover" width="200" th:if="${yPlaylist.images != null and !yPlaylist.images.isEmpty()}"/>-->
+        <p th:text="'Треки: ' + ${yPlaylist.trackCount}">Track count</p>
+    </div>
+</section>
 </body>
 </html>

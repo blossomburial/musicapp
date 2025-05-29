@@ -43,14 +43,14 @@ public class TokenService {
 
     RestTemplate restTemplate = new RestTemplate();
 
-    private User getUser() {
+    public User getUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         return userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    private OAuthToken getUsersTokens(User user, String provider) {
+    public OAuthToken getUsersTokens(User user, String provider) {
         return tokenRepository.findByUserAndProvider(user, provider)
                 .orElseThrow(() -> new RuntimeException("No " + provider + " token found for user"));
     }
@@ -101,7 +101,7 @@ public class TokenService {
         );
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            return "cant save tokens";
+            return "redirect:/profile?error";
         }
 
         Map<String, Object> tokenData = response.getBody();
@@ -127,7 +127,7 @@ public class TokenService {
 
         tokenRepository.save(token);
 
-        return "tokens saved";
+        return "redirect:/profile";
     }
 
     public String getYandexTokens(String code){

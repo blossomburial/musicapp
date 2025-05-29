@@ -1,0 +1,108 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+.search-header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(to right, #1db954, #1ed760);
+}
+
+.search-header h1 {
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-form input, .search-form select, .search-form button {
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+}
+
+.search-form input, .search-form select {
+    width: 250px;
+}
+
+.search-form button {
+    background-color: #1db954;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.search-form button:hover {
+    background-color: #17a44c;
+}
+
+.results-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.results-container h2 {
+    margin-bottom: 20px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.track-card {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: center;
+    padding: 15px;
+    transition: transform 0.2s;
+}
+
+.track-card:hover {
+    transform: scale(1.03);
+}
+
+.track-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.track-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.track-artist {
+    font-size: 14px;
+    color: #b3b3b3;
+    margin-bottom: 10px;
+}
+
+.play-button {
+    background-color: #1db954;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.play-button:hover {
+    background-color: #17a44c;
+}

@@ -6,6 +6,8 @@ import com.example.musicapp.dtos.YandexPlaylistInfo;
 import com.example.musicapp.models.User;
 import com.example.musicapp.repositories.TokenRepository;
 import com.example.musicapp.repositories.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +22,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,12 +39,17 @@ public class YandexAPIService {
     private String apiUrl;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final TokenService tokenService;
 
     RestTemplate restTemplate = new RestTemplate();
 
-    private String getUserId(String token) throws IOException, InterruptedException{
+    HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
-        HttpClient client = HttpClient.newHttpClient();
+
+
+    private String getUserId(String token) throws IOException, InterruptedException{
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://login.yandex.ru/info?"))
                 .header("Authorization", "Bearer " + token)
@@ -56,23 +66,11 @@ public class YandexAPIService {
     }
 
     public String getCurrentUser() throws IOException, InterruptedException{
+        OAuthToken tokens = tokenService.getUsersTokens(tokenService.getUser(), "yandex");
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
-
-        String accessToken = yandexTokens.get().getAccessToken();
-        String refreshToken = yandexTokens.get().getRefreshToken();
-
-        HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://login.yandex.ru/info?"))
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + tokens.getAccessToken())
                 .header("Accept", "application/json")
                 .GET()
                 .build();
@@ -86,22 +84,12 @@ public class YandexAPIService {
     public List<Map<String, Object>> getUsersPlaylists() throws IOException, InterruptedException {
         log.info("yandex getUsersPlaylists");
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
+        OAuthToken tokens = tokenService.getUsersTokens(tokenService.getUser(), "yandex");
 
-        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
-
-        String accessToken = yandexTokens.get().getAccessToken();
-        String refreshToken = yandexTokens.get().getRefreshToken();
-
-        String uid = getUserId(accessToken);
+        String uid = getUserId(tokens.getAccessToken());
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "OAuth " + accessToken);
+        headers.set("Authorization", "OAuth " + tokens.getAccessToken());
         headers.set("Accept", "application/json");
         headers.set("X-Yandex-Music-Client", "YandexMusicAPI");
 
@@ -125,20 +113,12 @@ public class YandexAPIService {
     }
 
     public List<TrackDto> getPlaylistTracks(String playlistId) throws IOException, InterruptedException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        OAuthToken tokens = tokenService.getUsersTokens(tokenService.getUser(), "yandex");
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Optional<OAuthToken> yandexTokens = tokenRepository.findByUserAndProvider(user, "yandex");
-
-        String accessToken = yandexTokens.get().getAccessToken();
-        String refreshToken = yandexTokens.get().getRefreshToken();
-
-        String uid = getUserId(accessToken);
+        String uid = getUserId(tokens.getAccessToken());
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "OAuth " + accessToken);
+        headers.set("Authorization", "OAuth " + tokens.getAccessToken());
         headers.set("Accept", "application/json");
         headers.set("X-Yandex-Music-Client", "YandexMusicAPI");
 
@@ -191,4 +171,36 @@ public class YandexAPIService {
         return trackDtos;
     }
 
+    public List<TrackDto> searchTracks(String query) throws IOException, InterruptedException {
+        OAuthToken tokens = tokenService.getUsersTokens(tokenService.getUser(), "yandex");
+
+        String url = apiUrl + "/search?text=" + URLEncoder.encode(query, StandardCharsets.UTF_8) + "&page=1&type=track";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "OAuth " + tokens.getAccessToken())
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode root = objectMapper.readTree(response.body());
+
+        JsonNode tracksNode = root.path("result").path("tracks").path("results");
+
+        List<TrackDto> tracks = new ArrayList<>();
+
+        for (JsonNode item : tracksNode) {
+            String trackId = item.path("id").asText();
+            String title = item.path("title").asText();
+            String artist = item.path("artists").get(0).path("name").asText();
+            String album = item.path("albums").get(0).path("title").asText();
+            String coverUrl = item.path("coverUri").asText().replace("%%", "200x200");
+
+
+            tracks.add(new TrackDto(trackId, title, artist, album, coverUrl));
+        }
+        return tracks;
+    }
 }

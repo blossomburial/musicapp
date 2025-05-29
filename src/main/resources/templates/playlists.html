@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
     <title>Spotify Playlists</title>
 </head>
-<body>
-<h1>Твои плейлисты</h1>
-<div th:if="${spotifyPlaylists.isEmpty() and yandexPlaylists.isEmpty()}">
-    <p>Нет плейлистов :(</p>
-</div>
-<div th:each="sPlaylist : ${spotifyPlaylists}">
-    <h2>
-        <a th:text="${sPlaylist.name}" th:href="@{/playlist/{id}(id=${sPlaylist.id}, platform='spotify')}"> </a>
-    </h2>
-    <img th:src="${sPlaylist.images[0].url}" alt="Cover" width="200" th:if="${sPlaylist.images != null and !sPlaylist.images.isEmpty()}"/>
-    <p th:text="'Треки: ' + ${sPlaylist.tracks.total}">Track count</p>
-</div>
+<body class="playlist-container">
+<section layout:fragment="content">
+    <h1>Твои плейлисты</h1>
 
-<div th:each="yPlaylist : ${yandexPlaylists}">
-    <h2>
-        <a th:text="${yPlaylist.title}" th:href="@{/playlist/{id}(id=${yPlaylist.kind}, platform='yandex')}"> </a>
-    </h2>
-<!--    <img th:src="${yPlaylist.images[0].url}" alt="Cover" width="200" th:if="${yPlaylist.images != null and !yPlaylist.images.isEmpty()}"/>-->
-    <p th:text="'Треки: ' + ${yPlaylist.trackCount}">Track count</p>
-</div>
+    <h2 style="color:#1DB954">Spotify</h2>
+    <div class="spotify-section">
+        <div class="playlist-card" th:each="sPlaylist : ${spotifyPlaylists}">
+            <img th:src="${sPlaylist.images[0].url}" alt="Cover" width="200"
+                 th:if="${sPlaylist.images != null and !sPlaylist.images.isEmpty()}"/>
+            <h3>
+                <a th:text="${sPlaylist.name}" th:href="@{/playlist/{id}(id=${sPlaylist.id}, platform='spotify')}"></a>
+            </h3>
+            <p th:text="'Треки: ' + ${sPlaylist.tracks.total}"></p>
+        </div>
+    </div>
+
+    <h2 style="color:#1DB954">Yandex Music</h2>
+    <div class="yandex-section">
+        <div class="playlist-card" th:each="yPlaylist : ${yandexPlaylists}">
+            <h3>
+                <a th:text="${yPlaylist.title}" th:href="@{/playlist/{id}(id=${yPlaylist.kind}, platform='yandex')}"></a>
+            </h3>
+            <p th:text="'Треки: ' + ${yPlaylist.trackCount}"></p>
+        </div>
+    </div>
+
+</section>
 </body>
 </html>

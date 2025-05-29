@@ -39,3 +39,23 @@ function addToPlaylist(element) {
         }
     });
 }
+
+function searchTracks() {
+    const query = document.getElementById('searchQuery').value;
+
+    fetch(`/api/search?query=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(tracks => {
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+            tracks.forEach(track => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+
+                    <strong>${track.title}</strong> — ${track.artist} (${track.album})
+                    <button type="submit" class="add-button">➕ В плейлист</button>
+                `;
+                container.appendChild(div);
+            });
+        });
+}

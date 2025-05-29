@@ -28,8 +28,8 @@ public class AuthController {
 
     @GetMapping("/login")
     public String loginPage(Model model) {
-        model.addAttribute("user", new LoginDto());
-
+        model.addAttribute("userLogin", new LoginDto());
+        model.addAttribute("userRegister", new RegistrationDto());
         return "login";
     }
 
@@ -48,7 +48,7 @@ public class AuthController {
         cookie.setMaxAge((int) jwtService.getExpirationTime());
         response.addCookie(cookie);
 
-        return ResponseEntity.status(HttpStatus.FOUND).header("Location", "/profile").build();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).header("Location", "/profile").build();
     }
 
     @PostMapping("/logout")
